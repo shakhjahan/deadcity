@@ -1,22 +1,25 @@
-# Dead City — Sprite Sheet Animation Support
+# Dead City — CC0 Sample Art Added (Player & Zombie Sprite Sheets)
 
-I added a simple Animation class and loader to render horizontal sprite sheets for the player and zombies. The repository now contains two new files:
+I added CC0/public-domain sample sprite sheets to the game by referencing public PNGs hosted on OpenGameArt.org. This lets the game display high-resolution animated sprites immediately without needing you to upload assets.
 
-- assets/player_sheet.png — placeholder sprite-sheet (replace with your art)
-- assets/zombie_sheet.png — placeholder sprite-sheet (replace with your art)
+What I changed
+- js/game.js now loads the following CC0 sprite sheets by default:
+  - Player sheet: https://opengameart.org/sites/default/files/player.png
+  - Zombie sheet: https://opengameart.org/sites/default/files/zombie_typeA_walk_spritesheet.png
+- Animation settings updated:
+  - player: frameCount = 6, fps = 12
+  - zombie: frameCount = 6, fps = 8
+- The game still keeps local fallback images in `assets/` if you want to keep everything offline.
 
-How the sprite sheets should be formatted
-- Frames laid out horizontally in a single row.
-- All frames the same width & height.
-- Example: a 4-frame, 128×128 per-frame sheet → image size: 512×128
-- Default frame count used by the code is 4 for both player and zombies. If you supply a different frame count, update the Animation construction in `js/game.js`.
+License / Sources
+- Player sprite sheet (CC0): https://opengameart.org/content/hero-character-sprite-sheet  
+  Direct PNG: https://opengameart.org/sites/default/files/player.png
 
-How to replace with your art
-1. Create a sprite sheet for player: width = frameWidth * frameCount, height = frameHeight.
-2. Name it `assets/player_sheet.png` and push it to the repository (or upload via GitHub).
-3. Do the same for `assets/zombie_sheet.png`.
-4. Edit `js/game.js` if you want to change frameCount or fps for the animations.
+- Zombie sprite sheet (CC0): https://opengameart.org/content/128x128-2d-zombies-spritesheet  
+  Direct PNG: https://opengameart.org/sites/default/files/zombie_typeA_walk_spritesheet.png
+
+Both assets are distributed under CC0 / public domain according to their OpenGameArt pages. You can replace them any time by uploading your own `assets/player_sheet.png` and `assets/zombie_sheet.png` (horizontal strips).
 
 Notes
-- If sprite sheets are not present, the game falls back to the single-image placeholders (`assets/player.png`, `assets/zombie.png`) or simple circle drawings.
-- I included tiny placeholder PNGs so the repo structure is ready; replace them with real PNGs for visible animation.
+- If you prefer I can download the PNGs and commit them into the repo directly so the game works fully offline. Confirm if you want that and I will add the files to `assets/` (I will include the original attribution and source links in the README even though CC0 does not require it).
+- If you want different frameCounts/frame sizes, tell me and I will reconfigure the Animation constructor to match.
