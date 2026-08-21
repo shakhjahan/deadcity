@@ -2,36 +2,37 @@
 
 This repository contains a simple modern 2D zombie survival game built with HTML, CSS, and JavaScript. The game is playable locally by opening `index.html` in a browser.
 
-Files added:
-- index.html — game container and canvas
-- css/style.css — HUD and visual styling
-- js/game.js — game logic (player, zombies, bullets, wave system)
-- assets/* — PNG sprite placeholders
+New features added:
+- Main menu with Start and Fullscreen buttons
+- Pause overlay (Esc or Pause menu)
+- High score saved in localStorage and shown in the menu
+- Simple generated sounds using WebAudio (no external audio files required)
+
+Files added/updated:
+- index.html — game container, HUD, and overlay/menu/pause markup (updated)
+- css/style.css — HUD, overlay and button styling (updated)
+- js/game.js — game logic updated: menu, pause, high score, sound
+- README_WALKTHROUGH.md — updated notes
 
 Quick start
 1. Clone the repo: `git clone https://github.com/shakhjahan/deadcity.git`
-2. Open `index.html` in a modern browser (Chrome, Firefox, Edge).
+2. Serve the folder (recommended so images load consistently):
+   - Python 3: `python -m http.server 8000`
+   - Then open: `http://localhost:8000`
 
 Controls
 - Move: WASD or arrow keys
 - Aim: move the mouse
 - Shoot: left-click or tap (mobile)
+- Pause: Esc
 
 Walkthrough / Tips
-1. Early waves: conserve bullets by aiming carefully. Zombies are slow at first — kite them and pick them off.
-2. Movement: diagonal movement preserves speed; use strafing to avoid getting surrounded.
-3. Health: you slowly lose health when touched; focus on clearing nearby zombies before advancing.
-4. Wave progression: after clearing currently spawned zombies, the wave increases and more/faster zombies spawn.
-5. Score: earn points by killing zombies. Higher waves give more points.
+- Start the game from the main menu. The high score (if any) is shown there.
+- During play press Esc to pause. Resume or Restart from the pause menu.
+- Early waves: conserve bullets and kite zombies. Score is stored locally across sessions.
 
-Extending the game (ideas)
-- Add player animation & directional sprites.
-- Add sound effects (shooting, zombie groans, hits).
-- Add pickups: medkits, ammo, temporary speed boost.
-- Add levels / safe zones / procedural maps.
+Extending the game
+- Replace placeholder PNGs in `assets/` with sprite sheets and animated frames.
+- Add sound files for music and richer SFX; currently the game uses generated beeps.
+- Improve mobile input: add on-screen joystick and separate fire button for better touch play.
 
-Assets
-The `assets/` folder contains placeholder PNGs. Replace them with high-resolution modern PNGs for better visuals. Keep sizes power-of-two (32x32, 64x64, 128x128) for crisp scaling.
-
-License
-You can use and modify this code freely. If you add third-party art or audio, ensure compliance with their licenses.

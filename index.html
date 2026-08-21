@@ -13,6 +13,31 @@
     <div id="health">Health: 100</div>
     <div id="wave">Wave: 1</div>
   </div>
+
+  <!-- Main menu / overlays -->
+  <div id="overlayMenu" class="overlay">
+    <div class="panel">
+      <h1>Dead City</h1>
+      <p class="muted">2D Zombie Survival — HTML/CSS/JS</p>
+      <div class="buttons">
+        <button id="startBtn" class="btn primary">Start Game</button>
+        <button id="fullscreenBtn" class="btn">Toggle Fullscreen</button>
+        <div class="meta">High Score: <span id="highScore">0</span></div>
+      </div>
+      <p class="controls">Controls: WASD / Arrow keys to move · Mouse to aim · Click to shoot · Esc to pause</p>
+    </div>
+  </div>
+
+  <div id="overlayPause" class="overlay hidden">
+    <div class="panel">
+      <h2>Paused</h2>
+      <div class="buttons">
+        <button id="resumeBtn" class="btn primary">Resume</button>
+        <button id="restartBtn" class="btn">Restart</button>
+      </div>
+    </div>
+  </div>
+
   <script src="js/game.js"></script>
 </body>
 </html>
