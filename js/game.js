@@ -1,5 +1,5 @@
-// Dead City — Game using CC0 sample sprite sheets from OpenGameArt
-// Updated: loads remote CC0 sprite sheets and uses higher frameCount/fps defaults
+// Dead City — Game using CC0 sample sprite sheets via a CORS-friendly proxy
+// This change replaces direct OpenGameArt URLs with a proxy (images.weserv.nl) to avoid CORS errors
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 let W = canvas.width = innerWidth;
@@ -18,11 +18,26 @@ const scoreEl = document.getElementById('score');
 const healthEl = document.getElementById('health');
 const waveEl = document.getElementById('wave');
 
-// Assets (now using CC0 sample sprite sheets hosted on OpenGameArt)
+// Helper: CORS-safe proxy URL builder using images.weserv.nl
+function proxyImage(url){
+  // images.weserv.nl proxies images and adds CORS headers.
+  // The url parameter must be the hostname/path without leading https://
+  // e.g. opengameart.org/sites/default/files/player.png
+  try{
+    const u = new URL(url);
+    // remote original host had https://... we'll strip the protocol
+    const proxied = 'https://images.weserv.nl/?url=' + encodeURIComponent(u.hostname + u.pathname + (u.search||''));
+    return proxied;
+  }catch(e){
+    // if not a full URL, assume it's already a relative path
+    return url;
+  }
+}
+
+// Assets (use proxied remote CC0 sample sprite sheets to avoid CORS) 
 const assets = {
-  // CC0 sprite sheets (horizontal strips)
-  player_sheet: 'https://opengameart.org/sites/default/files/player.png',
-  zombie_sheet: 'https://opengameart.org/sites/default/files/zombie_typeA_walk_spritesheet.png',
+  player_sheet: proxyImage('https://opengameart.org/sites/default/files/player.png'),
+  zombie_sheet: proxyImage('https://opengameart.org/sites/default/files/zombie_typeA_walk_spritesheet.png'),
   // fallback local assets (kept for offline use)
   player: 'assets/player.png',
   zombie: 'assets/zombie.png',
