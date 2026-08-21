@@ -1,4 +1,5 @@
-// Dead City — Game with menu, pause, and basic sounds + high score
+// Dead City — Game with sprite-sheet animation support
+// Adds an Animation class and sprite-sheet rendering for player and zombies.
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 let W = canvas.width = innerWidth;
@@ -17,10 +18,51 @@ const scoreEl = document.getElementById('score');
 const healthEl = document.getElementById('health');
 const waveEl = document.getElementById('wave');
 
-// Assets
-const assets = { player: 'assets/player.png', zombie: 'assets/zombie.png', bg: 'assets/bg.png', bullet: 'assets/bullet.png' };
+// Assets (now supports sprite sheets)
+const assets = {
+  player_sheet: 'assets/player_sheet.png',
+  zombie_sheet: 'assets/zombie_sheet.png',
+  player: 'assets/player.png',
+  zombie: 'assets/zombie.png',
+  bg: 'assets/bg.png',
+  bullet: 'assets/bullet.png'
+};
 const images = {};
 for(const k in assets){ images[k] = new Image(); images[k].src = assets[k]; }
+
+// Simple Animation helper (frames are laid horizontally)
+class Animation {
+  constructor(img, frameCount=4, frameWidth=null, frameHeight=null, fps=10){
+    this.img = img;
+    this.frameCount = frameCount;
+    this.fps = fps;
+    this.frame = 0;
+    this.time = 0;
+    this.frameWidth = frameWidth;
+    this.frameHeight = frameHeight;
+  }
+  update(dt){
+    if(!this.img.complete) return;
+    // infer sizes if not provided
+    if(!this.frameWidth) this.frameWidth = Math.floor(this.img.width / this.frameCount) || this.img.width;
+    if(!this.frameHeight) this.frameHeight = this.img.height;
+    this.time += dt;
+    const interval = 1/this.fps;
+    while(this.time > interval){ this.time -= interval; this.frame = (this.frame+1) % this.frameCount; }
+  }
+  draw(ctx, x, y, w, h, rotation=0){
+    if(!this.img.complete) return false;
+    const sx = this.frame * this.frameWidth;
+    ctx.save(); ctx.translate(x,y); ctx.rotate(rotation);
+    ctx.drawImage(this.img, sx, 0, this.frameWidth, this.frameHeight, -w/2, -h/2, w, h);
+    ctx.restore();
+    return true;
+  }
+}
+
+// Create animations (default frame counts can be changed when replacing sheets)
+const playerAnim = new Animation(images.player_sheet, 4, null, null, 12);
+const zombieAnim = new Animation(images.zombie_sheet, 4, null, null, 8);
 
 // Audio (WebAudio simple effects)
 let audioCtx = null;
@@ -31,7 +73,7 @@ function playHitSound(){ playBeep(160, 0.12, 'sawtooth', 0.05); }
 
 // Game state
 let gameState = 'menu'; // 'menu' | 'playing' | 'paused' | 'gameover'
-const player = {x: W/2, y: H/2, r: 20, speed: 250, health:100, angle:0};
+const player = {x: W/2, y: H/2, r: 24, speed: 250, health:100, angle:0};
 const keys = {};
 const bullets = [];
 const zombies = [];
@@ -65,12 +107,9 @@ resumeBtn.addEventListener('click', ()=>{ resumeGame(); });
 restartBtn.addEventListener('click', ()=>{ startGame(); });
 fullscreenBtn.addEventListener('click', ()=>{ if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); });
 
-function shoot(){ if(gameState!=='playing') return; // play sound
-  if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-  playShootSound();
-  const speed = 700; bullets.push({x:player.x + Math.cos(player.angle)*player.r, y:player.y + Math.sin(player.angle)*player.r, vx:Math.cos(player.angle)*speed, vy:Math.sin(player.angle)*speed, r:6, life:1.5}); }
+function shoot(){ if(gameState!=='playing') return; if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); playShootSound(); const speed = 700; bullets.push({x:player.x + Math.cos(player.angle)*player.r, y:player.y + Math.sin(player.angle)*player.r, vx:Math.cos(player.angle)*speed, vy:Math.sin(player.angle)*speed, r:6, life:1.5}); }
 
-function spawnZombie(){ const edge = Math.floor(Math.random()*4); let x,y; if(edge===0){ x=-60; y=Math.random()*H } if(edge===1){ x=W+60; y=Math.random()*H } if(edge===2){ x=Math.random()*W; y=-60 } if(edge===3){ x=Math.random()*W; y=H+60 } const speed = 40 + Math.random()*30 + wave*5; zombies.push({x,y, r:22, speed, hp:1 + Math.floor(wave/2)}); }
+function spawnZombie(){ const edge = Math.floor(Math.random()*4); let x,y; if(edge===0){ x=-80; y=Math.random()*H } if(edge===1){ x=W+80; y=Math.random()*H } if(edge===2){ x=Math.random()*W; y=-80 } if(edge===3){ x=Math.random()*W; y=H+80 } const speed = 40 + Math.random()*30 + wave*5; zombies.push({x,y, r:26, speed, hp:1 + Math.floor(wave/2), animOffset: Math.random()*10}); }
 
 function resetGame(){ player.x = W/2; player.y = H/2; player.health = 100; player.angle = 0; bullets.length = 0; zombies.length = 0; lastTime = performance.now(); spawnTimer = 0; spawnInterval = 2000; wave = 1; score = 0; }
 
@@ -78,11 +117,13 @@ function startGame(){ resetGame(); gameState = 'playing'; overlayMenu.classList.
 function pauseGame(){ if(gameState!=='playing') return; gameState='paused'; overlayPause.classList.remove('hidden'); }
 function resumeGame(){ if(gameState!=='paused') return; gameState='playing'; overlayPause.classList.add('hidden'); lastTime = performance.now(); requestAnimationFrame(gameLoop); }
 
-function endGame(){ gameState='gameover'; overlayMenu.classList.remove('hidden'); overlayPause.classList.add('hidden'); // show score + highscore
-  const hs = getHighScore(); if(score > hs) { setHighScore(Math.floor(score)); highScoreEl.textContent = Math.floor(score); } // When in menu, show current highscore element updated
-}
+function endGame(){ gameState='gameover'; overlayMenu.classList.remove('hidden'); overlayPause.classList.add('hidden'); const hs = getHighScore(); if(score > hs) { setHighScore(Math.floor(score)); highScoreEl.textContent = Math.floor(score); } }
 
 function update(dt){ if(gameState!=='playing') return;
+  // update animations
+  playerAnim.update(dt);
+  zombieAnim.update(dt);
+
   // player movement
   let vx=0, vy=0; if(keys['w']||keys['arrowup']) vy-=1; if(keys['s']||keys['arrowdown']) vy+=1; if(keys['a']||keys['arrowleft']) vx-=1; if(keys['d']||keys['arrowright']) vx+=1; const len = Math.hypot(vx,vy) || 1; player.x += (vx/len)*player.speed*dt; player.y += (vy/len)*player.speed*dt; player.x = Math.max(20, Math.min(W-20, player.x)); player.y = Math.max(20, Math.min(H-20, player.y));
 
@@ -90,7 +131,7 @@ function update(dt){ if(gameState!=='playing') return;
   for(let i=bullets.length-1;i>=0;i--){ const b=bullets[i]; b.x += b.vx*dt; b.y += b.vy*dt; b.life -= dt; if(b.life<=0 || b.x< -50 || b.x>W+50 || b.y<-50 || b.y>H+50) bullets.splice(i,1); }
 
   // zombies
-  for(let i=zombies.length-1;i>=0;i--){ const z=zombies[i]; const ang = Math.atan2(player.y - z.y, player.x - z.x); z.x += Math.cos(ang)*z.speed*dt; z.y += Math.sin(ang)*z.speed*dt; const dist = Math.hypot(player.x - z.x, player.y - z.y); if(dist < (player.r + z.r - 4)){ player.health -= 10 * dt; if(player.health <=0){ player.health = 0; playHitSound(); endGame(); } }
+  for(let i=zombies.length-1;i>=0;i--){ const z=zombies[i]; const ang = Math.atan2(player.y - z.y, player.x - z.x); z.x += Math.cos(ang)*z.speed*dt; z.y += Math.sin(ang)*z.speed*dt; const dist = Math.hypot(player.x - z.x, player.y - z.y); if(dist < (player.r + z.r - 6)){ player.health -= 10 * dt; if(player.health <=0){ player.health = 0; playHitSound(); endGame(); } }
     for(let j=bullets.length-1;j>=0;j--){ const b=bullets[j]; const d = Math.hypot(b.x - z.x, b.y - z.y); if(d < (b.r + z.r)){ bullets.splice(j,1); z.hp -=1; playHitSound(); if(z.hp<=0){ zombies.splice(i,1); score += 10; break; } } }
   }
 
@@ -102,24 +143,34 @@ function update(dt){ if(gameState!=='playing') return;
 function draw(){ // background
   ctx.fillStyle = '#071018'; ctx.fillRect(0,0,W,H);
   if(images.bg && images.bg.complete){ const pat = ctx.createPattern(images.bg, 'repeat'); ctx.fillStyle = pat; ctx.globalAlpha = 0.08; ctx.fillRect(0,0,W,H); ctx.globalAlpha=1; }
+
   // zombies
-  for(const z of zombies){ ctx.save(); ctx.translate(z.x,z.y); if(images.zombie && images.zombie.complete){ ctx.drawImage(images.zombie, -z.r, -z.r, z.r*2, z.r*2); } else { ctx.fillStyle = '#7f2b2b'; ctx.beginPath(); ctx.arc(0,0,z.r,0,Math.PI*2); ctx.fill(); } ctx.restore(); }
+  for(const z of zombies){ // try sprite-sheet
+    const drawn = (images.zombie_sheet && images.zombie_sheet.complete && images.zombie_sheet.width>4);
+    if(drawn){ // set zombie animation frame offset for variety
+      // temporarily advance frame based on z.animOffset
+      zombieAnim.update(0); // ensure sizes
+      zombieAnim.draw(ctx, z.x, z.y, z.r*2, z.r*2, 0);
+    } else if(images.zombie && images.zombie.complete){ ctx.drawImage(images.zombie, z.x - z.r, z.y - z.r, z.r*2, z.r*2); } else { ctx.fillStyle = '#7f2b2b'; ctx.beginPath(); ctx.arc(z.x,z.y,z.r,0,Math.PI*2); ctx.fill(); }
+  }
+
   // bullets
   for(const b of bullets){ if(images.bullet && images.bullet.complete){ ctx.drawImage(images.bullet, b.x-b.r, b.y-b.r, b.r*2, b.r*2); } else { ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.fill(); } }
-  // player
-  ctx.save(); ctx.translate(player.x, player.y); ctx.rotate(player.angle); if(images.player && images.player.complete){ ctx.drawImage(images.player, -player.r, -player.r, player.r*2, player.r*2); } else { ctx.fillStyle = '#00d1b2'; ctx.beginPath(); ctx.arc(0,0,player.r,0,Math.PI*2); ctx.fill(); } ctx.restore();
+
+  // player (sprite-sheet fallback to player image or circle)
+  const playerDrawn = (images.player_sheet && images.player_sheet.complete && images.player_sheet.width>4);
+  if(playerDrawn){ playerAnim.draw(ctx, player.x, player.y, player.r*2, player.r*2, player.angle); }
+  else if(images.player && images.player.complete){ ctx.save(); ctx.translate(player.x, player.y); ctx.rotate(player.angle); ctx.drawImage(images.player, -player.r, -player.r, player.r*2, player.r*2); ctx.restore(); }
+  else { ctx.save(); ctx.translate(player.x, player.y); ctx.rotate(player.angle); ctx.fillStyle = '#00d1b2'; ctx.beginPath(); ctx.arc(0,0,player.r,0,Math.PI*2); ctx.fill(); ctx.restore(); }
 }
 
-function gameLoop(t){ const dt = Math.min(0.05, (t - lastTime)/1000); lastTime = t; if(gameState==='playing'){ update(dt); draw(); scoreEl.textContent = 'Score: '+Math.floor(score); healthEl.textContent = 'Health: '+Math.max(0,Math.floor(player.health)); waveEl.textContent = 'Wave: '+wave; } else if(gameState==='menu'){ /* subtle background animation could go here */ draw(); }
-  if(gameState==='gameover'){ // draw final overlay
-    ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(0,0,W,H); ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.font='48px system-ui'; ctx.fillText('Game Over', W/2, H/2 - 20); ctx.font='20px system-ui'; ctx.fillText('Refresh or Start to try again', W/2, H/2 + 20);
-  }
+function gameLoop(t){ const dt = Math.min(0.05, (t - lastTime)/1000); lastTime = t; if(gameState==='playing'){ update(dt); draw(); scoreEl.textContent = 'Score: '+Math.floor(score); healthEl.textContent = 'Health: '+Math.max(0,Math.floor(player.health)); waveEl.textContent = 'Wave: '+wave; } else if(gameState==='menu'){ draw(); }
+  if(gameState==='gameover'){ ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(0,0,W,H); ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.font='48px system-ui'; ctx.fillText('Game Over', W/2, H/2 - 20); ctx.font='20px system-ui'; ctx.fillText('Refresh or Start to try again', W/2, H/2 + 20); }
   if(gameState!=='gameover' && gameState!=='paused'){ requestAnimationFrame(gameLoop); }
 }
 
 // Initialize menu and set high score
 function initMenu(){ highScoreEl.textContent = getHighScore(); overlayMenu.classList.remove('hidden'); overlayPause.classList.add('hidden'); }
-
 initMenu();
 
 // Expose a resume on user gesture for audio on some mobile browsers
