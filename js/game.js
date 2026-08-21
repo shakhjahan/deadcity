@@ -31,6 +31,8 @@ const assets = {
 };
 const images = {};
 for(const k in assets){ images[k] = new Image(); images[k].crossOrigin = 'anonymous'; images[k].src = assets[k]; }
+// mark background image failure if it errors
+images.bg && (images.bg.onerror = ()=> { images.bg._failed = true; });
 
 // Simple Animation helper (frames are laid horizontally)
 class Animation {
@@ -143,25 +145,33 @@ function update(dt){ if(gameState!=='playing') return;
 
 function draw(){ // background
   ctx.fillStyle = '#071018'; ctx.fillRect(0,0,W,H);
-  if(images.bg && images.bg.complete){ const pat = ctx.createPattern(images.bg, 'repeat'); ctx.fillStyle = pat; ctx.globalAlpha = 0.08; ctx.fillRect(0,0,W,H); ctx.globalAlpha=1; }
+  // Safely draw background pattern only if image is loaded and not broken
+  if(images.bg && images.bg.complete && images.bg.naturalWidth > 0 && !images.bg._failed){
+    try{
+      const pat = ctx.createPattern(images.bg, 'repeat');
+      if(pat){ ctx.fillStyle = pat; ctx.globalAlpha = 0.08; ctx.fillRect(0,0,W,H); ctx.globalAlpha=1; }
+    }catch(err){
+      // Image may be in a broken state or CORS blocked — mark and skip
+      images.bg._failed = true;
+      console.warn('Background pattern skipped due to image error:', err);
+    }
+  }
 
   // zombies
   for(const z of zombies){ // try sprite-sheet
-    const drawn = (images.zombie_sheet && images.zombie_sheet.complete && images.zombie_sheet.naturalWidth>8);
+    const drawn = (images.zombie_sheet && images.zombie_sheet.complete && images.zombie_sheet.naturalWidth>8 && !images.zombie_sheet._failed);
     if(drawn){ // draw frame with slight phase offset
-      // advance zombie animation a bit based on phase for variation
-      // (the global zombieAnim instance controls frame index; for variety we draw using the current frame)
       zombieAnim.draw(ctx, z.x, z.y, z.r*2, z.r*2, 0);
-    } else if(images.zombie && images.zombie.complete){ ctx.drawImage(images.zombie, z.x - z.r, z.y - z.r, z.r*2, z.r*2); } else { ctx.fillStyle = '#7f2b2b'; ctx.beginPath(); ctx.arc(z.x,z.y,z.r,0,Math.PI*2); ctx.fill(); }
+    } else if(images.zombie && images.zombie.complete && images.zombie.naturalWidth>0){ ctx.drawImage(images.zombie, z.x - z.r, z.y - z.r, z.r*2, z.r*2); } else { ctx.fillStyle = '#7f2b2b'; ctx.beginPath(); ctx.arc(z.x,z.y,z.r,0,Math.PI*2); ctx.fill(); }
   }
 
   // bullets
-  for(const b of bullets){ if(images.bullet && images.bullet.complete){ ctx.drawImage(images.bullet, b.x-b.r, b.y-b.r, b.r*2, b.r*2); } else { ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.fill(); } }
+  for(const b of bullets){ if(images.bullet && images.bullet.complete && images.bullet.naturalWidth>0){ ctx.drawImage(images.bullet, b.x-b.r, b.y-b.r, b.r*2, b.r*2); } else { ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.fill(); } }
 
   // player (sprite-sheet fallback to player image or circle)
-  const playerDrawn = (images.player_sheet && images.player_sheet.complete && images.player_sheet.naturalWidth>8);
+  const playerDrawn = (images.player_sheet && images.player_sheet.complete && images.player_sheet.naturalWidth>8 && !images.player_sheet._failed);
   if(playerDrawn){ playerAnim.draw(ctx, player.x, player.y, player.r*2, player.r*2, player.angle); }
-  else if(images.player && images.player.complete){ ctx.save(); ctx.translate(player.x, player.y); ctx.rotate(player.angle); ctx.drawImage(images.player, -player.r, -player.r, player.r*2, player.r*2); ctx.restore(); }
+  else if(images.player && images.player.complete && images.player.naturalWidth>0){ ctx.save(); ctx.translate(player.x, player.y); ctx.rotate(player.angle); ctx.drawImage(images.player, -player.r, -player.r, player.r*2, player.r*2); ctx.restore(); }
   else { ctx.save(); ctx.translate(player.x, player.y); ctx.rotate(player.angle); ctx.fillStyle = '#00d1b2'; ctx.beginPath(); ctx.arc(0,0,player.r,0,Math.PI*2); ctx.fill(); ctx.restore(); }
 }
 
