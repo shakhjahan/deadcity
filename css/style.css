@@ -1,0 +1,20 @@
+/* Modern flat styling */
+:root{
+  --bg:#0b0f14;
+  --accent:#00d1b2;
+  --muted:#98a2ad;
+  --panel:rgba(255,255,255,0.03);
+}
+html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial}
+body{background:var(--bg);overflow:hidden;color:#e6eef6}
+#gameCanvas{display:block;position:fixed;inset:0}
+#hud{position:fixed;left:14px;top:14px;background:var(--panel);backdrop-filter: blur(6px);padding:10px;border-radius:10px;color:var(--muted);box-shadow:0 6px 24px rgba(2,6,23,0.6)}
+#hud div{margin-bottom:6px;font-weight:600}
+#hud #score{color:var(--accent);font-size:16px}
+#hud #health{color:#ff6b6b}
+#hud #wave{color:#ffd166}
+
+/* mobile hint */
+@media (max-width:600px){
+  #hud{left:8px;top:8px;padding:8px}
+}
