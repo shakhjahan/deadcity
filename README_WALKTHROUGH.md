@@ -1,25 +1,29 @@
-# Dead City — CC0 Sample Art Added (Player & Zombie Sprite Sheets)
+# Dead City — Background Layers & HUD
 
-I added CC0/public-domain sample sprite sheets to the game by referencing public PNGs hosted on OpenGameArt.org. This lets the game display high-resolution animated sprites immediately without needing you to upload assets.
+I added three parallax background layers (placeholders) and updated the game to use them with a rain overlay and a HUD that matches the cinematic reference you provided.
 
-What I changed
-- js/game.js now loads the following CC0 sprite sheets by default:
-  - Player sheet: https://opengameart.org/sites/default/files/player.png
-  - Zombie sheet: https://opengameart.org/sites/default/files/zombie_typeA_walk_spritesheet.png
-- Animation settings updated:
-  - player: frameCount = 6, fps = 12
-  - zombie: frameCount = 6, fps = 8
-- The game still keeps local fallback images in `assets/` if you want to keep everything offline.
+What I committed
+- assets/bg_far.png — far skyline layer (placeholder PNG; replace with your full-resolution image). Recommended filename: bg_far.png
+- assets/bg_mid.png — mid buildings layer (placeholder PNG; replace with your full-resolution image). Recommended filename: bg_mid.png
+- assets/bg_fore.png — foreground street layer (placeholder PNG; replace with your full-resolution image). Recommended filename: bg_fore.png
+- Updated index.html — added left HUD (portrait, HP, ammo, kills), top-right minimap, and bottom controls hint.
+- Updated css/style.css — HUD and overlay styles to match a dark, cinematic look.
+- Updated js/game.js — parallax drawing (cover scaling + offsets), rain overlay (animated), HUD wiring, minimap placeholder, and basic gameplay wiring.
 
-License / Sources
-- Player sprite sheet (CC0): https://opengameart.org/content/hero-character-sprite-sheet  
-  Direct PNG: https://opengameart.org/sites/default/files/player.png
+How to replace placeholders with your provided images
+1. Upload your far/mid/fore PNGs into `assets/` and name them exactly:
+   - assets/bg_far.png
+   - assets/bg_mid.png
+   - assets/bg_fore.png
+   These should be the layered images you posted earlier (far skyline, buildings, street).
+2. For best results: export all three layers at the same pixel width (e.g., 3840 px wide) and matching heights (or crop to the same height). This keeps cover-scaling consistent.
 
-- Zombie sprite sheet (CC0): https://opengameart.org/content/128x128-2d-zombies-spritesheet  
-  Direct PNG: https://opengameart.org/sites/default/files/zombie_typeA_walk_spritesheet.png
+Run the game locally without a server
+- Because all assets are local, you can open `index.html` directly from your file system (double-click) in most browsers and play. If your browser blocks local file access for some images, use a simple static host (GitHub Pages or a local server) — but the game is designed to work locally.
 
-Both assets are distributed under CC0 / public domain according to their OpenGameArt pages. You can replace them any time by uploading your own `assets/player_sheet.png` and `assets/zombie_sheet.png` (horizontal strips).
+Next steps I can do for you
+- Replace the placeholder PNGs with the exact images you provided (I can commit them if you give me the PNG files or direct download links).
+- Tune parallax multipliers, rain density, and HUD colors to better match the reference.
+- Add dynamic lamp light puddle reflections and screen-space lighting.
 
-Notes
-- If you prefer I can download the PNGs and commit them into the repo directly so the game works fully offline. Confirm if you want that and I will add the files to `assets/` (I will include the original attribution and source links in the README even though CC0 does not require it).
-- If you want different frameCounts/frame sizes, tell me and I will reconfigure the Animation constructor to match.
+If you want me to commit your three images directly into the repo (replace placeholders), reply: "Commit images now" and provide the files or public links. Otherwise, upload them to the `assets/` folder using GitHub and the code will pick them up automatically.

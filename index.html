@@ -9,13 +9,41 @@
 </head>
 <body>
   <canvas id="gameCanvas"></canvas>
-  <div id="hud">
-    <div id="score">Score: 0</div>
-    <div id="health">Health: 100</div>
-    <div id="wave">Wave: 1</div>
+
+  <!-- HUD: left (portrait / hp / ammo / kills) -->
+  <div id="hudLeft" class="hud-left">
+    <div class="portrait">
+      <img id="portraitImg" src="assets/player.png" alt="player">
+    </div>
+    <div class="stats">
+      <div class="stat-row">
+        <div class="label">HP</div>
+        <div class="bar" id="hpBar"><div class="fill" id="hpFill"></div></div>
+        <div class="value" id="hpVal">100</div>
+      </div>
+      <div class="stat-row">
+        <div class="label">AMMO</div>
+        <div class="bar" id="ammoBar"><div class="fill" id="ammoFill"></div></div>
+        <div class="value" id="ammoVal">30/120</div>
+      </div>
+      <div class="stat-row small">
+        <div class="label">KILLS</div>
+        <div class="value" id="killsVal">0</div>
+      </div>
+    </div>
   </div>
 
-  <!-- Main menu / overlays -->
+  <!-- HUD: top-right minimap placeholder -->
+  <div id="minimap" class="minimap">
+    <canvas id="minimapCanvas" width="240" height="120"></canvas>
+  </div>
+
+  <!-- controls bottom -->
+  <div id="controlsBottom" class="controls-bottom">
+    <div class="controls-row">A D — Movement &ensp; W — Ladder &ensp; SPACE — Jump &ensp; E — Door &ensp; Click — Shoot &ensp; R — Reload</div>
+  </div>
+
+  <!-- overlays already in index.html (menu/pause) -->
   <div id="overlayMenu" class="overlay">
     <div class="panel">
       <h1>Dead City</h1>
